@@ -120,20 +120,34 @@ world_data = [
 
 class Player:
     def __init__(self,x ,y) -> None:
-        img = pygame.image.load('res/guy1.png')
-        self.image = pygame.transform.scale(img, (40, 80))
-        self.rect = self.image.get_rect()
+        #img = pygame.image.load('res/guy1.png')
+        #self.image = pygame.transform.scale(img, (40, 80))
+        #self.rect = self.image.get_rect()
+        # self.jumped = False
+        self.player_jumped = False
+        self.counter=0
+        self.index=0
+        self.images_right=[]
+        self.images_left=[]
+        self.direction=0
+        for num in range(1,5):
+            img_right=pygame.image.load(f'res/guy{num}.png')
+            img_right=pygame.transform.scale(img_right,(40,80))
+            img_left=pygame.transform.flip(img_right,True,False)
+            self.images_right.append(img_right)
+            self.images_left.append(img_left)
+        self.image=self.images_right[self.index]
+        self.rect=self.image.get_rect()
         self.rect.x = x  # Linke Ecke von Player-Rect
         self.rect.y = y # Linke Ecke von Player-Rect
         self.vel_y = 0
         self.vel_x = 5
-        # self.jumped = False
-        self.player_jumped = False
 
     def print_player_debug_info(self) -> None:
         print(f'X: {self.rect.x} Y: {self.rect.y} vel_x: {self.vel_x} vel-y: {self.vel_y}')
 
     def update(self) -> None:
+        walking_cooldown=5
         dx = 0
         dy = 0
 
@@ -142,9 +156,13 @@ class Player:
   
         if key[pygame.K_LEFT] and self.rect.x>0:
             dx-=self.vel_x
+            self.counter += 1
+            self.direction = 1
 
         if key[pygame.K_RIGHT] and (self.rect.x<WINDOW_WIDTH - self.rect.width): 
             dx+=self.vel_x
+            self.counter += 1
+            self.direction = 1
 
         # Jumping
         if (self.player_jumped == False) and key[pygame.K_SPACE]:
@@ -154,6 +172,18 @@ class Player:
         # Jumping motion
         if key[pygame.K_SPACE]==False:
             self.player_jumped=False
+        
+        # Handle Animation
+
+        if self.counter > walking_cooldown:
+            self.counter = 0	
+            self.index += 1
+            if self.index >= len(self.images_right):
+                self.index = 0
+            if self.direction == 1:
+                self.image = self.images_right[self.index]
+            if self.direction == -1:
+                self.image = self.images_left[self.index]
 
         # Gravity
         self.vel_y += 1
@@ -178,12 +208,15 @@ class Player:
 world=World(world_data)
 world.print_tile_list()
 player=Player(500,500)
+fps=60
+clock=pygame.time.Clock()
 
 #################################################################
 # GAME LOOP
 #################################################################
 
 while game_is_running:
+    clock.tick(fps)
     screen.blit(background_image,(0,0))
     #draw_grid()
     #draw_grid_labels()
