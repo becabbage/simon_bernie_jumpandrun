@@ -10,6 +10,9 @@ FONT_SIZE_SMALL = 15
 WHITE=(255,255,255)
 BLACK=(0,0,0)
 
+# Camera offset
+camera_x = 0
+
 screen=pygame.display.set_mode((WINDOW_WIDTH,WINDOW_HEIGHT))
 pygame.display.set_caption("Platformer Tutorial")
 
@@ -101,32 +104,32 @@ class World():
 
     def draw(self):
         for tile in self.tile_list:
-            screen.blit(tile[0], tile[1])
+            screen.blit(tile[0], (tile[1].x - camera_x, tile[1].y))
 
     def print_tile_list(self):
         print(self.tile_list)
 
 world_data = [
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
-[0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0], 
-[0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 2, 2, 0], 
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 7, 0, 5, 0, 0, 0, 0], 
-[0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0], 
-[0, 7, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
-[0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 7, 0, 0, 0, 0, 0], 
-[0, 0, 2, 0, 0, 7, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
-[0, 0, 0, 2, 0, 0, 4, 0, 0, 0, 0, 3, 0, 0, 3, 0, 0, 0, 0, 0], 
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0], 
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 7, 0, 0, 0, 0, 2, 0, 0], 
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 2, 2], 
-[0, 0, 0, 0, 0, 0, 2, 2, 2, 6, 6, 6, 6, 6, 1, 1, 1, 1, 1, 1], 
-[0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 
-[2, 0, 0, 3, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 
-[1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0], 
+[0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
+[0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0], 
+[0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
+[0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0], 
+[0, 0, 0, 2, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0], 
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0], 
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2], 
+[0, 0, 0, 0, 0, 0, 2, 2, 2, 6, 6, 6, 6, 6, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 2, 6, 6, 6, 6, 6, 1, 1, 1, 1, 1, 1, 1, 1, 1], 
+[0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 
+[2, 0, 0, 3, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 3, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 
+[1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ]
 
 class Button():
@@ -163,6 +166,7 @@ class Player:
 
     def reset(self,x,y) -> None:
         self.player_jumped = False
+        self.in_air = True
         self.counter=0
         self.index=0
         self.images_right=[]
@@ -180,56 +184,66 @@ class Player:
         self.rect.x = x  # Linke Ecke von Player-Rect
         self.rect.y = y # Linke Ecke von Player-Rect
         self.vel_y = 0
-        self.vel_x = 5
+        self.vel_x = 300  # Pixel pro Sekunde
         self.width=self.image.get_width()
         self.height=self.image.get_height()
 
     def print_player_debug_info(self) -> None:
         print(f'X: {self.rect.x} Y: {self.rect.y} vel_x: {self.vel_x} vel-y: {self.vel_y}')
 
-    def update(self, game_over) -> int:
-        walking_cooldown=5
+    def update(self, game_over, delta_time) -> int:
+        walking_cooldown=0.1  # Sekunden zwischen Animationsframes
         dx = 0
         dy = 0
+        is_moving = False
 
         #get keypresses
         key = pygame.key.get_pressed()
         if game_over == 0:
-            if key[pygame.K_LEFT] and self.rect.x > 0:
-                dx -= self.vel_x
-                self.counter += 1
+            if key[pygame.K_LEFT]:
+                dx -= self.vel_x * delta_time
                 self.direction = -1
+                is_moving = True
 
-            if key[pygame.K_RIGHT] and (self.rect.x < WINDOW_WIDTH - self.rect.width): 
-                dx += self.vel_x
-                self.counter += 1
+            if key[pygame.K_RIGHT]: 
+                dx += self.vel_x * delta_time
                 self.direction = 1
+                is_moving = True
 
             # Jumping
-            if (self.player_jumped == False) and key[pygame.K_SPACE]:
-                self.vel_y = -15
+            if (self.player_jumped == False) and key[pygame.K_SPACE] and (self.in_air == False):
+                self.vel_y = -750  # Pixel pro Sekunde
                 self.player_jumped = True
+                self.in_air = True
 
             # Jumping motion
             if key[pygame.K_SPACE] == False:
                 self.player_jumped = False
             
             # Handle Animation
-            if self.counter > walking_cooldown:
-                self.counter = 0    
-                self.index += 1
-                if self.index >= len(self.images_right):
-                    self.index = 0
-                if self.direction == 1:
-                    self.image = self.images_right[self.index]
-                if self.direction == -1:
-                    self.image = self.images_left[self.index]
+            if is_moving:
+                self.counter += delta_time
+                if self.counter > walking_cooldown:
+                    self.counter -= walking_cooldown    
+                    self.index += 1
+                    if self.index >= len(self.images_right):
+                        self.index = 0
+            else:
+                self.counter = 0
+                self.index = 0
+            
+            # Update image based on direction
+            if self.direction == 1:
+                self.image = self.images_right[self.index]
+            elif self.direction == -1:
+                self.image = self.images_left[self.index]
 
             # Gravity
-            self.vel_y += 1
-            if self.vel_y > 10:
-                self.vel_y = 10
-            dy += self.vel_y
+            self.vel_y += 2500 * delta_time  # Pixel pro Sekunde pro Sekunde (Beschleunigung)
+            if self.vel_y > 500:  # Max fall speed in Pixel pro Sekunde
+                self.vel_y = 500
+            dy += self.vel_y * delta_time
+            self.in_air = True
 
             # check for collision
             for tile in world.tile_list:
@@ -246,6 +260,7 @@ class Player:
                     elif self.vel_y >= 0:
                         dy = tile[1].top - self.rect.bottom
                         self.vel_y = 0
+                        self.in_air = False
 
             # add collision with enemies
             if pygame.sprite.spritecollide(self, blob_group, False):
@@ -260,14 +275,24 @@ class Player:
             #update player coordinates
             self.rect.x += dx
             self.rect.y += dy
+            
+            # Calculate map width based on world_data
+            map_width = len(world_data[0]) * tile_size
+            
+            # Keep player within map boundaries
+            if self.rect.left < 0:
+                self.rect.left = 0
+            if self.rect.right > map_width:
+                self.rect.right = map_width
 
             # stop the player from falling below ground
             if self.rect.bottom > WINDOW_HEIGHT:
                 self.rect.bottom = WINDOW_HEIGHT
                 dy = 0
+                self.in_air = False
 
         #draw player onto screen
-        screen.blit(self.image, self.rect)
+        screen.blit(self.image, (self.rect.x - camera_x, self.rect.y))
 
         # This draws the player rectangle
         #pygame.draw.rect(screen, WHITE, self.rect, width=2)
@@ -310,7 +335,7 @@ class Enemy(pygame.sprite.Sprite):
             self.rect.x = self.start_x
 
     def draw(self) -> None:
-        screen.blit(self.image, self.rect)
+        screen.blit(self.image, (self.rect.x - camera_x, self.rect.y))
 
     def collide(self) -> None:
         pass
@@ -362,13 +387,24 @@ quit_button=Button(600,250,pygame.image.load('res/quit_button.png'),pygame.K_q)
 #################################################################
 
 while game_is_running:
-    clock.tick(fps)
+    delta_time = clock.tick(fps) / 1000.0  # Convert milliseconds to seconds
     screen.blit(background_image,(0,0))
     #draw_grid()
     #draw_grid_labels()
+    
+    # Update camera to follow player
+    map_width = len(world_data[0]) * tile_size
+    camera_x = player.rect.x - WINDOW_WIDTH // 2 + player.rect.width // 2
+    camera_x = max(0, camera_x)  # Don't go past left edge
+    camera_x = min(camera_x, map_width - WINDOW_WIDTH)  # Don't go past right edge
+    
     world.draw()
-    lava_group.draw(screen)
-    blob_group.draw(screen)
+    # Draw lava with camera offset
+    for lava in lava_group:
+        screen.blit(lava.image, (lava.rect.x - camera_x, lava.rect.y))
+    # Draw enemies with camera offset
+    for blob in blob_group:
+        blob.draw()
 
     #print(f'Game Over: {game_over}')
 
@@ -376,14 +412,14 @@ while game_is_running:
         #lava_group.update()
         blob_group.update()
         # player.print_player_debug_info() # this is to print the players position and velocity
-        game_over=player.update(game_over)
+        game_over=player.update(game_over, delta_time)
 
     if game_over == 1:
-        screen.blit(player.dead_image, player.rect)
+        screen.blit(player.dead_image, (player.rect.x - camera_x, player.rect.y))
         player.rect.y -= 5  # Move the dead image upwards
         if player.rect.y + player.rect.height < 0:  # Check if the image is out of the screen
             if restart_button.draw() == True:
-                screen.blit(player.image, player.rect)
+                screen.blit(player.image, (player.rect.x - camera_x, player.rect.y))
                 world.reset_world(world_data)
                 player.reset(500,500)
                 game_over = 0
