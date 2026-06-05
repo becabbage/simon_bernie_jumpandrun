@@ -51,7 +51,6 @@ def draw_grid_labels():
         x_pos = x_label * tile_size
         draw_text(grid_label_text, (x_pos, FONT_SIZE_SMALL), myfont, BLACK, WHITE, 'top')
 
-
 def draw_grid():
     for line in range(0,int(WINDOW_WIDTH/tile_size)):
         pygame.draw.line(screen,WHITE,(0,line*tile_size),(WINDOW_WIDTH,line*tile_size),1)
@@ -95,8 +94,8 @@ class World():
         print(self.tile_list)
 
 world_data = [
-[2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
-[2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
 [0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0], 
 [0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 2, 2, 0], 
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 7, 0, 5, 0, 0, 0, 0], 
@@ -113,7 +112,7 @@ world_data = [
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 2, 2], 
 [0, 0, 0, 0, 0, 0, 2, 2, 2, 6, 6, 6, 6, 6, 1, 1, 1, 1, 1, 1], 
 [0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 
-[0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 
+[2, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 
 [1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ]
 
@@ -142,6 +141,8 @@ class Player:
         self.rect.y = y # Linke Ecke von Player-Rect
         self.vel_y = 0
         self.vel_x = 5
+        self.width=self.image.get_width()
+        self.height=self.image.get_height()
 
     def print_player_debug_info(self) -> None:
         print(f'X: {self.rect.x} Y: {self.rect.y} vel_x: {self.vel_x} vel-y: {self.vel_y}')
@@ -151,13 +152,13 @@ class Player:
         dx = 0
         dy = 0
 
-		#get keypressesey
+        #get keypressesey
         key = pygame.key.get_pressed()
   
         if key[pygame.K_LEFT] and self.rect.x>0:
             dx-=self.vel_x
             self.counter += 1
-            self.direction = 1
+            self.direction = -1
 
         if key[pygame.K_RIGHT] and (self.rect.x<WINDOW_WIDTH - self.rect.width): 
             dx+=self.vel_x
@@ -176,7 +177,7 @@ class Player:
         # Handle Animation
 
         if self.counter > walking_cooldown:
-            self.counter = 0	
+            self.counter = 0    
             self.index += 1
             if self.index >= len(self.images_right):
                 self.index = 0
@@ -192,18 +193,37 @@ class Player:
         dy += self.vel_y
 
         # TODO: check for collision
+        for tile in world.tile_list:
+            #check for collision in x direction
+            if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
+                dx = 0
+            #check for collision in y direction
+            if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
+                #check if below the ground i.e. jumping
+                if self.vel_y < 0:
+                    dy = tile[1].bottom - self.rect.top
+                    self.vel_y = 0
+                #check if above the ground i.e. falling
+                elif self.vel_y >= 0:
+                    dy = tile[1].top - self.rect.bottom
+                    self.vel_y = 0
 
-		#update player coordinates
+
+
+        #update player coordinates
         self.rect.x += dx
         self.rect.y += dy
 
-		# stop the player from falling below ground
+        # stop the player from falling below ground
         if self.rect.bottom > WINDOW_HEIGHT:
             self.rect.bottom = WINDOW_HEIGHT
             dy = 0
-	
-		#draw player onto screen
+
+
+        #draw player onto screen
         screen.blit(self.image, self.rect)
+
+        pygame.draw.rect(screen,WHITE,self.rect,width=2)
 
 world=World(world_data)
 world.print_tile_list()
