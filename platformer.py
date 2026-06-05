@@ -48,7 +48,7 @@ game_surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
 
 tile_size=50
 game_over=0 # 0 = False, 1 = True
-
+game_state="running"  # "running", "paused", "won"
 game_is_running=True
 background_image=pygame.image.load('res/sky.png')
 
@@ -85,6 +85,205 @@ def draw_grid_labels():
         grid_label_text = f"({x_label * tile_size},0)"
         x_pos = x_label * tile_size
         draw_text(grid_label_text, (x_pos, FONT_SIZE_SMALL), myfont, BLACK, WHITE, 'top')
+
+def show_instructions(total_coins):
+    """
+    Display instruction screen at the beginning showing how many coins to collect.
+    """
+    pygame.display.set_caption("Spielanleitung")
+    clock = pygame.time.Clock()
+    
+    title_font = pygame.font.Font(None, 70)
+    text_font = pygame.font.Font(None, 45)
+    small_font = pygame.font.Font(None, 35)
+    
+    instructions_shown = False
+    
+    while not instructions_shown:
+        clock.tick(60)
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit(0)
+            if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                instructions_shown = True
+        
+        game_surface.fill((70, 130, 180))
+        
+        # Draw title
+        title_text = title_font.render("Willkommen!", True, WHITE)
+        title_rect = title_text.get_rect(center=(GAME_WIDTH // 2, 80))
+        game_surface.blit(title_text, title_rect)
+        
+        # Draw instructions
+        instruction_text = text_font.render(f"Sammle alle {total_coins} Multivitamin-Säfte!", True, WHITE)
+        instruction_rect = instruction_text.get_rect(center=(GAME_WIDTH // 2, 250))
+        game_surface.blit(instruction_text, instruction_rect)
+        
+        # Draw controls
+        controls = [
+            "Pfeiltasten: Bewegung",
+            "Leertaste: Springen",
+            "ESC: Pause",
+            "V: Vollbild",
+        ]
+        
+        y_pos = 450
+        for control in controls:
+            control_text = small_font.render(control, True, WHITE)
+            control_rect = control_text.get_rect(center=(GAME_WIDTH // 2, y_pos))
+            game_surface.blit(control_text, control_rect)
+            y_pos += 80
+        
+        # Draw start hint
+        hint_text = small_font.render("Drücke eine Taste zum Starten", True, (255, 200, 0))
+        hint_rect = hint_text.get_rect(center=(GAME_WIDTH // 2, GAME_HEIGHT - 80))
+        game_surface.blit(hint_text, hint_rect)
+        
+        # Scale and display
+        scale_x = WINDOW_WIDTH / GAME_WIDTH
+        scale_y = WINDOW_HEIGHT / GAME_HEIGHT
+        scale_factor = min(scale_x, scale_y)
+        scaled_width = int(GAME_WIDTH * scale_factor)
+        scaled_height = int(GAME_HEIGHT * scale_factor)
+        offset_x = (WINDOW_WIDTH - scaled_width) // 2
+        offset_y = (WINDOW_HEIGHT - scaled_height) // 2
+        scaled_surface = pygame.transform.scale(game_surface, (scaled_width, scaled_height))
+        screen.fill(BLACK)
+        screen.blit(scaled_surface, (offset_x, offset_y))
+        pygame.display.update()
+
+def show_pause_menu():
+    """
+    Display pause menu when player presses ESC.
+    Returns True to continue game, False to quit.
+    """
+    pygame.display.set_caption("Pausiert")
+    clock = pygame.time.Clock()
+    
+    title_font = pygame.font.Font(None, 70)
+    text_font = pygame.font.Font(None, 45)
+    hint_font = pygame.font.Font(None, 35)
+    
+    pause_menu_active = True
+    result = True
+    
+    while pause_menu_active:
+        clock.tick(60)
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pause_menu_active = False
+                elif event.key == pygame.K_q:
+                    return False
+        
+        # Draw semi-transparent overlay
+        overlay = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
+        overlay.set_alpha(200)
+        overlay.fill((0, 0, 0))
+        game_surface.blit(overlay, (0, 0))
+        
+        # Draw pause text
+        pause_text = title_font.render("PAUSIERT", True, WHITE)
+        pause_rect = pause_text.get_rect(center=(GAME_WIDTH // 2, GAME_HEIGHT // 2 - 150))
+        game_surface.blit(pause_text, pause_rect)
+        
+        # Draw resume hint
+        resume_text = text_font.render("ESC zum Fortfahren", True, (255, 200, 0))
+        resume_rect = resume_text.get_rect(center=(GAME_WIDTH // 2, GAME_HEIGHT // 2 + 50))
+        game_surface.blit(resume_text, resume_rect)
+        
+        # Draw quit hint
+        quit_text = hint_font.render("Q zum Beenden", True, WHITE)
+        quit_rect = quit_text.get_rect(center=(GAME_WIDTH // 2, GAME_HEIGHT // 2 + 150))
+        game_surface.blit(quit_text, quit_rect)
+        
+        # Scale and display
+        scale_x = WINDOW_WIDTH / GAME_WIDTH
+        scale_y = WINDOW_HEIGHT / GAME_HEIGHT
+        scale_factor = min(scale_x, scale_y)
+        scaled_width = int(GAME_WIDTH * scale_factor)
+        scaled_height = int(GAME_HEIGHT * scale_factor)
+        offset_x = (WINDOW_WIDTH - scaled_width) // 2
+        offset_y = (WINDOW_HEIGHT - scaled_height) // 2
+        scaled_surface = pygame.transform.scale(game_surface, (scaled_width, scaled_height))
+        screen.fill(BLACK)
+        screen.blit(scaled_surface, (offset_x, offset_y))
+        pygame.display.update()
+    
+    return result
+
+def show_win_screen(coins_collected, total_coins):
+    """
+    Display win screen when all coins are collected.
+    """
+    pygame.display.set_caption("Du hast gewonnen!")
+    clock = pygame.time.Clock()
+    
+    title_font = pygame.font.Font(None, 80)
+    text_font = pygame.font.Font(None, 50)
+    small_font = pygame.font.Font(None, 35)
+    
+    win_screen_active = True
+    
+    while win_screen_active:
+        clock.tick(60)
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:
+                    return True
+                elif event.key == pygame.K_q:
+                    return False
+        
+        # Draw win screen
+        game_surface.fill((70, 200, 130))
+        
+        # Draw victory text
+        victory_text = title_font.render("SIEG!", True, WHITE)
+        victory_rect = victory_text.get_rect(center=(GAME_WIDTH // 2, 150))
+        game_surface.blit(victory_text, victory_rect)
+        
+        # Draw congratulations
+        congrats_text = text_font.render("Herzlichen Glückwunsch!", True, WHITE)
+        congrats_rect = congrats_text.get_rect(center=(GAME_WIDTH // 2, 300))
+        game_surface.blit(congrats_text, congrats_rect)
+        
+        # Draw coins collected
+        coins_text = text_font.render(f"Münzen: {coins_collected}/{total_coins}", True, WHITE)
+        coins_rect = coins_text.get_rect(center=(GAME_WIDTH // 2, 450))
+        game_surface.blit(coins_text, coins_rect)
+        
+        # Draw options
+        restart_text = small_font.render("R: Nächstes Level", True, (255, 200, 0))
+        restart_rect = restart_text.get_rect(center=(GAME_WIDTH // 2, 600))
+        game_surface.blit(restart_text, restart_rect)
+        
+        quit_text = small_font.render("Q: Hauptmenü", True, (255, 200, 0))
+        quit_rect = quit_text.get_rect(center=(GAME_WIDTH // 2, 680))
+        game_surface.blit(quit_text, quit_rect)
+        
+        # Scale and display
+        scale_x = WINDOW_WIDTH / GAME_WIDTH
+        scale_y = WINDOW_HEIGHT / GAME_HEIGHT
+        scale_factor = min(scale_x, scale_y)
+        scaled_width = int(GAME_WIDTH * scale_factor)
+        scaled_height = int(GAME_HEIGHT * scale_factor)
+        offset_x = (WINDOW_WIDTH - scaled_width) // 2
+        offset_y = (WINDOW_HEIGHT - scaled_height) // 2
+        scaled_surface = pygame.transform.scale(game_surface, (scaled_width, scaled_height))
+        screen.fill(BLACK)
+        screen.blit(scaled_surface, (offset_x, offset_y))
+        pygame.display.update()
+    
+    return False
+
 
 def draw_grid():
     for line in range(0,int(WINDOW_WIDTH/tile_size)):
@@ -273,6 +472,12 @@ level_name, world_data = select_level()
 
 # Set window title with level name
 pygame.display.set_caption(f"Platformer - Level: {level_name}")
+
+# Count total coins in the level
+total_coins_in_level = sum(row.count(4) + row.count(5) for row in world_data)
+
+# Show instructions screen before starting the game
+show_instructions(total_coins_in_level)
 
 class Button():
     def __init__(self, x, y, image, shortcut_key:pygame.key) -> None:
@@ -595,7 +800,7 @@ while game_is_running:
         blob.draw()
     
     # Draw coin counter
-    if game_over == 0:
+    if game_over == 0 and game_state == "running":
         coin_font = pygame.font.Font(None, 35)
         coin_text = coin_font.render(f"Coins: {player.coins_collected}/{player.total_coins}", True, WHITE)
         game_surface.blit(coin_text, (10, 10))
@@ -606,7 +811,11 @@ while game_is_running:
         #lava_group.update()
         blob_group.update()
         # player.print_player_debug_info() # this is to print the players position and velocity
-        game_over=player.update(game_over, delta_time)
+        if game_state == "running":
+            game_over=player.update(game_over, delta_time)
+            # Check if player won (collected all coins)
+            if player.coins_collected >= player.total_coins:
+                game_state = "won"
 
     if game_over == 1:
         game_surface.blit(player.dead_image, (player.rect.x - camera_x, player.rect.y))
@@ -617,10 +826,21 @@ while game_is_running:
                 world.reset_world(world_data)
                 player.reset(PLAYER_START_X, PLAYER_START_Y)
                 game_over = 0
+                game_state = "running"
             if quit_button.draw() == True:
                 game_is_running = False
                 game_over = 0
-            #game_is_running = False  # End the game loop
+
+    if game_state == "won":
+        if show_win_screen(player.coins_collected, player.total_coins):
+            # Player selected next level (R key) - restart current level
+            world.reset_world(world_data)
+            player.reset(PLAYER_START_X, PLAYER_START_Y)
+            game_over = 0
+            game_state = "running"
+        else:
+            # Player selected quit (Q key) - return to level selection
+            game_is_running = False
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -633,6 +853,12 @@ while game_is_running:
                     screen = pygame.display.set_mode((fullscreen_width, fullscreen_height), pygame.FULLSCREEN)
                 else:
                     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+            elif event.key == pygame.K_ESCAPE and game_state == "running" and game_over == 0:
+                # Toggle pause menu
+                if show_pause_menu():
+                    game_state = "running"
+                else:
+                    game_is_running = False
 
     # Skaliere die virtuelle Spieloberfläche auf das echte Fenster
     current_width = fullscreen_width if is_fullscreen else WINDOW_WIDTH
