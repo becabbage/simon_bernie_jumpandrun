@@ -142,9 +142,9 @@ class Player:
         self.images_left=[]
         self.direction=0
         for num in range(1,5):
-            img_right=pygame.image.load(f'res/guy{num}.png')
-            img_right=pygame.transform.scale(img_right,(40,80))
-            img_left=pygame.transform.flip(img_right,True,False)
+            img_left=pygame.image.load(f'res/resized_van{num}.png')
+            img_left=pygame.transform.scale(img_left,(40,80))
+            img_right=pygame.transform.flip(img_left,True,False)
             self.images_right.append(img_right)
             self.images_left.append(img_left)
         self.dead_image=pygame.image.load(f'res/ghost.png')
@@ -243,7 +243,8 @@ class Player:
         #draw player onto screen
         screen.blit(self.image, self.rect)
 
-        pygame.draw.rect(screen, WHITE, self.rect, width=2)
+        # This draws the player rectangle
+        #pygame.draw.rect(screen, WHITE, self.rect, width=2)
 
         return game_over
 
@@ -335,8 +336,8 @@ clock=pygame.time.Clock()
 while game_is_running:
     clock.tick(fps)
     screen.blit(background_image,(0,0))
-    draw_grid()
-    draw_grid_labels()
+    #draw_grid()
+    #draw_grid_labels()
     world.draw()
     lava_group.draw(screen)
     blob_group.draw(screen)
