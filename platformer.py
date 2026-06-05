@@ -62,11 +62,15 @@ def draw_grid():
 
 class World():
     def __init__(self, data):
-        self.tile_list = [] # Tile lists of pygame
+        self.reset_world(data)
 
+    def reset_world(self, data):
+        blob_group.empty()
+        lava_group.empty()
         dirt_image=pygame.image.load('res/dirt.png')
         grass_image=pygame.image.load('res/grass.png')
-
+        lava_group
+        self.tile_list = []
         row_count=0
         for row in data:
             col_count=0
@@ -92,7 +96,6 @@ class World():
                 if tile==6:
                     lava = Lava(col_count * tile_size, row_count * tile_size + int(tile_size//2) )
                     lava_group.add(lava)
-
                 col_count += 1
             row_count += 1
 
@@ -102,8 +105,6 @@ class World():
 
     def print_tile_list(self):
         print(self.tile_list)
-
-
 
 world_data = [
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
@@ -128,13 +129,39 @@ world_data = [
 [1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ]
 
+class Button():
+    def __init__(self, x, y, image, shortcut_key:pygame.key) -> None:
+        self.image = image
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (x, y)
+        self.shortcut_key = shortcut_key
+
+    def draw(self):
+        action = False
+
+        # get mouse position
+        pos = pygame.mouse.get_pos()
+
+        # check mouseover and clicked conditions
+        if self.rect.collidepoint(pos):
+            if pygame.mouse.get_pressed()[0] == 1:
+                action = True
+
+        key = pygame.key.get_pressed()
+
+        if key[self.shortcut_key]:
+            action = True
+
+        # draw button on screen
+        screen.blit(self.image, (self.rect.x, self.rect.y))
+
+        return action
 
 class Player:
     def __init__(self,x ,y) -> None:
-        #img = pygame.image.load('res/guy1.png')
-        #self.image = pygame.transform.scale(img, (40, 80))
-        #self.rect = self.image.get_rect()
-        # self.jumped = False
+        self.reset(x,y)
+
+    def reset(self,x,y) -> None:
         self.player_jumped = False
         self.counter=0
         self.index=0
@@ -156,7 +183,6 @@ class Player:
         self.vel_x = 5
         self.width=self.image.get_width()
         self.height=self.image.get_height()
-
 
     def print_player_debug_info(self) -> None:
         print(f'X: {self.rect.x} Y: {self.rect.y} vel_x: {self.vel_x} vel-y: {self.vel_y}')
@@ -328,6 +354,8 @@ player=Player(500,500)
 
 fps=60
 clock=pygame.time.Clock()
+restart_button=Button(300,250,pygame.image.load('res/restart_button.png'),pygame.K_r)
+quit_button=Button(600,250,pygame.image.load('res/quit_button.png'),pygame.K_q)
 
 #################################################################
 # GAME LOOP
@@ -342,7 +370,7 @@ while game_is_running:
     lava_group.draw(screen)
     blob_group.draw(screen)
 
-    print(f'Game Over: {game_over}')
+    #print(f'Game Over: {game_over}')
 
     if game_over == 0:
         #lava_group.update()
@@ -354,7 +382,15 @@ while game_is_running:
         screen.blit(player.dead_image, player.rect)
         player.rect.y -= 5  # Move the dead image upwards
         if player.rect.y + player.rect.height < 0:  # Check if the image is out of the screen
-            game_is_running = False  # End the game loop
+            if restart_button.draw() == True:
+                screen.blit(player.image, player.rect)
+                world.reset_world(world_data)
+                player.reset(500,500)
+                game_over = 0
+            if quit_button.draw() == True:
+                game_is_running = False
+                game_over = 0
+            #game_is_running = False  # End the game loop
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
