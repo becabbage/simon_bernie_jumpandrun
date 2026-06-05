@@ -18,6 +18,8 @@ game_is_running=True
 
 background_image=pygame.image.load('res/sky.png')
 
+###################### FUNCTIONS #########################
+
 def draw_text(text, pos, font, color=BLACK, background=WHITE, anchor='center'):
     text_surface = font.render(text, True, color, background)
     offset_y=0
@@ -55,6 +57,7 @@ def draw_grid():
         pygame.draw.line(screen,WHITE,(0,line*tile_size),(WINDOW_WIDTH,line*tile_size),1)
         pygame.draw.line(screen,WHITE,(line*tile_size,0),(line*tile_size,WINDOW_HEIGHT),1)
 
+###################### CLASSES #########################
 
 class World():
     def __init__(self, data):
@@ -92,8 +95,8 @@ class World():
         print(self.tile_list)
 
 world_data = [
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
+[2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
+[2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
 [0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0], 
 [0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 2, 2, 0], 
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 7, 0, 5, 0, 0, 0, 0], 
@@ -114,19 +117,84 @@ world_data = [
 [1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ]
 
+
+class Player:
+    def __init__(self,x ,y) -> None:
+        img = pygame.image.load('res/guy1.png')
+        self.image = pygame.transform.scale(img, (40, 80))
+        self.rect = self.image.get_rect()
+        self.rect.x = x  # Linke Ecke von Player-Rect
+        self.rect.y = y # Linke Ecke von Player-Rect
+        self.vel_y = 0
+        self.vel_x = 5
+        # self.jumped = False
+        self.player_jumped = False
+
+    def print_player_debug_info(self) -> None:
+        print(f'X: {self.rect.x} Y: {self.rect.y} vel_x: {self.vel_x} vel-y: {self.vel_y}')
+
+    def update(self) -> None:
+        dx = 0
+        dy = 0
+
+		#get keypressesey
+        key = pygame.key.get_pressed()
+  
+        if key[pygame.K_LEFT] and self.rect.x>0:
+            dx-=self.vel_x
+
+        if key[pygame.K_RIGHT] and (self.rect.x<WINDOW_WIDTH - self.rect.width): 
+            dx+=self.vel_x
+
+        # Jumping
+        if (self.player_jumped == False) and key[pygame.K_SPACE]:
+            self.vel_y=-15
+            self.player_jumped=True
+
+        # Jumping motion
+        if key[pygame.K_SPACE]==False:
+            self.player_jumped=False
+
+        # Gravity
+        self.vel_y += 1
+        if self.vel_y > 10:
+            self.vel_y = 10
+        dy += self.vel_y
+
+        # TODO: check for collision
+
+		#update player coordinates
+        self.rect.x += dx
+        self.rect.y += dy
+
+		# stop the player from falling below ground
+        if self.rect.bottom > WINDOW_HEIGHT:
+            self.rect.bottom = WINDOW_HEIGHT
+            dy = 0
+	
+		#draw player onto screen
+        screen.blit(self.image, self.rect)
+
 world=World(world_data)
 world.print_tile_list()
+player=Player(500,500)
+
+#################################################################
 # GAME LOOP
+#################################################################
 
 while game_is_running:
     screen.blit(background_image,(0,0))
     #draw_grid()
     #draw_grid_labels()
     world.draw()
+    player.print_player_debug_info()
+    player.update()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             game_is_running=False
+
     pygame.display.update()
 
 pygame.quit()
