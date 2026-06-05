@@ -3,9 +3,9 @@ import pygame
 
 pygame.init()
 
-# Konstanten
-WINDOW_HEIGHT=1000
-WINDOW_WIDTH=1000
+# Konstanten für die virtuelle Spielgröße
+GAME_WIDTH = 1000
+GAME_HEIGHT = 1000
 FONT_SIZE_SMALL = 15
 WHITE=(255,255,255)
 BLACK=(0,0,0)
@@ -13,7 +13,37 @@ BLACK=(0,0,0)
 # Camera offset
 camera_x = 0
 
-screen=pygame.display.set_mode((WINDOW_WIDTH,WINDOW_HEIGHT))
+# Ermittle verfügbare Bildschirmgröße
+info = pygame.display.Info()
+SCREEN_WIDTH = info.current_w
+SCREEN_HEIGHT = info.current_h
+
+# Berechne optimale Fenstergröße
+# Maximal 1200x1200, mindestens 600x600
+max_size = min(SCREEN_WIDTH - 100, SCREEN_HEIGHT - 100, 1200)
+min_size = 600
+
+if GAME_WIDTH > max_size:
+    # Skaliere runter wenn Bildschirm zu klein
+    scale = max_size / GAME_WIDTH
+elif GAME_WIDTH < min_size and SCREEN_WIDTH >= GAME_WIDTH and SCREEN_HEIGHT >= GAME_HEIGHT:
+    # Skaliere hoch wenn Bildschirm groß genug
+    scale = min(1.2, min_size / GAME_WIDTH)
+else:
+    # Verwende 1:1 wenn möglich
+    scale = 1.0
+
+WINDOW_WIDTH = int(GAME_WIDTH * scale)
+WINDOW_HEIGHT = int(GAME_HEIGHT * scale)
+
+# Vollbild-Modus
+is_fullscreen = False
+fullscreen_width = SCREEN_WIDTH
+fullscreen_height = SCREEN_HEIGHT
+
+# Erstelle echtes Fenster und virtuelle Spieloberfläche
+screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+game_surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
 pygame.display.set_caption("Platformer Tutorial")
 
 tile_size=50
@@ -38,7 +68,7 @@ def draw_text(text, pos, font, color=BLACK, background=WHITE, anchor='center'):
     elif anchor == 'top':
         offset_x = text_surface.get_width() / 2
         offset_y = 0
-    screen.blit(text_surface, (pos[0] - offset_x, pos[1] - offset_y))
+    game_surface.blit(text_surface, (pos[0] - offset_x, pos[1] - offset_y))
 
 def draw_grid_labels():
     myfont = pygame.font.Font(None, FONT_SIZE_SMALL) 
@@ -104,7 +134,7 @@ class World():
 
     def draw(self):
         for tile in self.tile_list:
-            screen.blit(tile[0], (tile[1].x - camera_x, tile[1].y))
+            game_surface.blit(tile[0], (tile[1].x - camera_x, tile[1].y))
 
     def print_tile_list(self):
         print(self.tile_list)
@@ -156,7 +186,7 @@ class Button():
             action = True
 
         # draw button on screen
-        screen.blit(self.image, (self.rect.x, self.rect.y))
+        game_surface.blit(self.image, (self.rect.x, self.rect.y))
 
         return action
 
@@ -171,7 +201,7 @@ class Player:
         self.index=0
         self.images_right=[]
         self.images_left=[]
-        self.direction=0
+        self.direction=1
         for num in range(1,5):
             img_left=pygame.image.load(f'res/resized_van{num}.png')
             img_left=pygame.transform.scale(img_left,(40,80))
@@ -181,10 +211,13 @@ class Player:
         self.dead_image=pygame.image.load(f'res/ghost.png')
         self.image=self.images_right[self.index]
         self.rect=self.image.get_rect()
-        self.rect.x = x  # Linke Ecke von Player-Rect
-        self.rect.y = y # Linke Ecke von Player-Rect
-        self.vel_y = 0
-        self.vel_x = 300  # Pixel pro Sekunde
+        # Verwende Float-Positionen für präzise Bewegung
+        self.x = float(x)
+        self.y = float(y)
+        self.rect.x = int(self.x)
+        self.rect.y = int(self.y)
+        self.vel_y = 0.0
+        self.vel_x = 300.0  # Pixel pro Sekunde
         self.width=self.image.get_width()
         self.height=self.image.get_height()
 
@@ -248,17 +281,17 @@ class Player:
             # check for collision
             for tile in world.tile_list:
                 #check for collision in x direction
-                if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
+                if tile[1].colliderect(self.x + dx, self.y, self.width, self.height):
                     dx = 0
                 #check for collision in y direction
-                if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
+                if tile[1].colliderect(self.x, self.y + dy, self.width, self.height):
                     #check if below the ground i.e. jumping
                     if self.vel_y < 0:
-                        dy = tile[1].bottom - self.rect.top
+                        dy = tile[1].bottom - self.y
                         self.vel_y = 0
                     #check if above the ground i.e. falling
                     elif self.vel_y >= 0:
-                        dy = tile[1].top - self.rect.bottom
+                        dy = tile[1].top - (self.y + self.height)
                         self.vel_y = 0
                         self.in_air = False
 
@@ -272,27 +305,31 @@ class Player:
                 print('collision with lava')
                 game_over = 1
 
-            #update player coordinates
-            self.rect.x += dx
-            self.rect.y += dy
+            #update player coordinates (Float-Positionen)
+            self.x += dx
+            self.y += dy
             
             # Calculate map width based on world_data
             map_width = len(world_data[0]) * tile_size
             
             # Keep player within map boundaries
-            if self.rect.left < 0:
-                self.rect.left = 0
-            if self.rect.right > map_width:
-                self.rect.right = map_width
+            if self.x < 0:
+                self.x = 0
+            if self.x + self.width > map_width:
+                self.x = map_width - self.width
 
             # stop the player from falling below ground
-            if self.rect.bottom > WINDOW_HEIGHT:
-                self.rect.bottom = WINDOW_HEIGHT
-                dy = 0
+            if self.y + self.height > GAME_HEIGHT:
+                self.y = GAME_HEIGHT - self.height
+                self.vel_y = 0
                 self.in_air = False
+            
+            # Sync rect with float positions for rendering
+            self.rect.x = int(self.x)
+            self.rect.y = int(self.y)
 
         #draw player onto screen
-        screen.blit(self.image, (self.rect.x - camera_x, self.rect.y))
+        game_surface.blit(self.image, (self.rect.x - camera_x, self.rect.y))
 
         # This draws the player rectangle
         #pygame.draw.rect(screen, WHITE, self.rect, width=2)
@@ -335,7 +372,7 @@ class Enemy(pygame.sprite.Sprite):
             self.rect.x = self.start_x
 
     def draw(self) -> None:
-        screen.blit(self.image, (self.rect.x - camera_x, self.rect.y))
+        game_surface.blit(self.image, (self.rect.x - camera_x, self.rect.y))
 
     def collide(self) -> None:
         pass
@@ -366,7 +403,7 @@ class Lava(pygame.sprite.Sprite):
         pass
 
     def draw(self) -> None:
-        screen.blit(self.image, self.rect)
+        game_surface.blit(self.image, self.rect)
 
     def reset(self) -> None:
         pass
@@ -388,7 +425,7 @@ quit_button=Button(600,250,pygame.image.load('res/quit_button.png'),pygame.K_q)
 
 while game_is_running:
     delta_time = clock.tick(fps) / 1000.0  # Convert milliseconds to seconds
-    screen.blit(background_image,(0,0))
+    game_surface.blit(background_image,(0,0))
     #draw_grid()
     #draw_grid_labels()
     
@@ -401,7 +438,7 @@ while game_is_running:
     world.draw()
     # Draw lava with camera offset
     for lava in lava_group:
-        screen.blit(lava.image, (lava.rect.x - camera_x, lava.rect.y))
+        game_surface.blit(lava.image, (lava.rect.x - camera_x, lava.rect.y))
     # Draw enemies with camera offset
     for blob in blob_group:
         blob.draw()
@@ -415,11 +452,11 @@ while game_is_running:
         game_over=player.update(game_over, delta_time)
 
     if game_over == 1:
-        screen.blit(player.dead_image, (player.rect.x - camera_x, player.rect.y))
+        game_surface.blit(player.dead_image, (player.rect.x - camera_x, player.rect.y))
         player.rect.y -= 5  # Move the dead image upwards
         if player.rect.y + player.rect.height < 0:  # Check if the image is out of the screen
             if restart_button.draw() == True:
-                screen.blit(player.image, (player.rect.x - camera_x, player.rect.y))
+                game_surface.blit(player.image, (player.rect.x - camera_x, player.rect.y))
                 world.reset_world(world_data)
                 player.reset(500,500)
                 game_over = 0
@@ -431,7 +468,35 @@ while game_is_running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             game_is_running=False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_v:
+                # Toggle Vollbild-Modus
+                is_fullscreen = not is_fullscreen
+                if is_fullscreen:
+                    screen = pygame.display.set_mode((fullscreen_width, fullscreen_height), pygame.FULLSCREEN)
+                else:
+                    screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 
+    # Skaliere die virtuelle Spieloberfläche auf das echte Fenster
+    current_width = fullscreen_width if is_fullscreen else WINDOW_WIDTH
+    current_height = fullscreen_height if is_fullscreen else WINDOW_HEIGHT
+    
+    # Berechne Skalierung mit Seitenverhältnis für Vollbild
+    if is_fullscreen:
+        scale_x = current_width / GAME_WIDTH
+        scale_y = current_height / GAME_HEIGHT
+        scale_factor = min(scale_x, scale_y)
+        scaled_width = int(GAME_WIDTH * scale_factor)
+        scaled_height = int(GAME_HEIGHT * scale_factor)
+        offset_x = (current_width - scaled_width) // 2
+        offset_y = (current_height - scaled_height) // 2
+        scaled_surface = pygame.transform.scale(game_surface, (scaled_width, scaled_height))
+        screen.fill(BLACK)  # Schwarze Balken
+        screen.blit(scaled_surface, (offset_x, offset_y))
+    else:
+        scaled_surface = pygame.transform.scale(game_surface, (current_width, current_height))
+        screen.blit(scaled_surface, (0, 0))
+    
     pygame.display.update()
 
 pygame.quit()
