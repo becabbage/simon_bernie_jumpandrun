@@ -1,5 +1,6 @@
 #from pygame.locals import *
 import pygame
+from level_manager import get_map_files, load_level, get_level_name
 
 pygame.init()
 
@@ -44,7 +45,6 @@ fullscreen_height = SCREEN_HEIGHT
 # Erstelle echtes Fenster und virtuelle Spieloberfläche
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 game_surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
-pygame.display.set_caption("Platformer Tutorial")
 
 tile_size=50
 game_over=0 # 0 = False, 1 = True
@@ -100,6 +100,7 @@ class World():
     def reset_world(self, data):
         blob_group.empty()
         lava_group.empty()
+        coin_group.empty()
         dirt_image=pygame.image.load('res/dirt.png')
         grass_image=pygame.image.load('res/grass.png')
         lava_group
@@ -126,6 +127,10 @@ class World():
                     # create a enemy based on the Enemy class. Position the enemy based on the col_count and row_count 
                     blob = Enemy(col_count * tile_size, row_count * tile_size + 15)
                     blob_group.add(blob)
+                if tile==4 or tile==5:
+                    # Create coins at positions marked with 4 or 5
+                    coin = Coin(col_count * tile_size, row_count * tile_size)
+                    coin_group.add(coin)
                 if tile==6:
                     lava = Lava(col_count * tile_size, row_count * tile_size + int(tile_size//2) )
                     lava_group.add(lava)
@@ -139,28 +144,135 @@ class World():
     def print_tile_list(self):
         print(self.tile_list)
 
-world_data = [
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0], 
-[0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
-[0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0], 
-[0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
-[0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0], 
-[0, 0, 0, 2, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0], 
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0], 
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2], 
-[0, 0, 0, 0, 0, 0, 2, 2, 2, 6, 6, 6, 6, 6, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 2, 6, 6, 6, 6, 6, 1, 1, 1, 1, 1, 1, 1, 1, 1], 
-[0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 
-[2, 0, 0, 3, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 3, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 
-[1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-]
+
+def select_level():
+    """
+    Display a level selection dialog in a Pygame window.
+    
+    Returns:
+        Tuple of (level_name, world_data)
+    """
+    map_files = get_map_files()
+    
+    if not map_files:
+        print("ERROR: Keine .map Dateien gefunden!")
+        print("Bitte erstelle mindestens eine .map Datei im Spieleverzeichnis.")
+        exit(1)
+    
+    # Create a dedicated selection window
+    pygame.display.set_caption("Level Auswahl")
+    clock = pygame.time.Clock()
+    
+    # Fonts for the dialog
+    title_font = pygame.font.Font(None, 60)
+    level_font = pygame.font.Font(None, 40)
+    hint_font = pygame.font.Font(None, 25)
+    
+    # Calculate level button positions
+    level_names = [get_level_name(f) for f in map_files]
+    button_width = 300
+    button_height = 60
+    button_spacing = 20
+    total_height = len(map_files) * (button_height + button_spacing) + 100
+    
+    selected_index = 0
+    selection_done = False
+    
+    while not selection_done:
+        clock.tick(60)
+        
+        # Handle events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit(0)
+            
+            if event.type == pygame.KEYDOWN:
+                # Number keys (1-9) to select levels
+                if pygame.K_1 <= event.key <= pygame.K_9:
+                    num = event.key - pygame.K_1
+                    if num < len(map_files):
+                        selected_index = num
+                
+                # Arrow keys for navigation
+                if event.key == pygame.K_UP:
+                    selected_index = (selected_index - 1) % len(map_files)
+                if event.key == pygame.K_DOWN:
+                    selected_index = (selected_index + 1) % len(map_files)
+                
+                # Enter to confirm
+                if event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
+                    selection_done = True
+            
+            # Mouse click detection
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_y = event.pos[1]
+                for i in range(len(map_files)):
+                    button_y = 150 + i * (button_height + button_spacing)
+                    if button_y <= mouse_y <= button_y + button_height:
+                        selected_index = i
+                        selection_done = True
+                        break
+        
+        # Draw the dialog window
+        game_surface.fill((70, 130, 180))  # Steel blue background
+        
+        # Draw title
+        title_text = title_font.render("Level Auswahl", True, WHITE)
+        title_rect = title_text.get_rect(center=(GAME_WIDTH // 2, 30))
+        game_surface.blit(title_text, title_rect)
+        
+        # Draw level buttons
+        for i, level_name in enumerate(level_names):
+            button_y = 150 + i * (button_height + button_spacing)
+            button_x = GAME_WIDTH // 2 - button_width // 2
+            
+            # Highlight selected level
+            if i == selected_index:
+                color = (255, 200, 0)  # Gold for selected
+                pygame.draw.rect(game_surface, color, (button_x, button_y, button_width, button_height))
+                pygame.draw.rect(game_surface, WHITE, (button_x, button_y, button_width, button_height), 3)
+            else:
+                color = (100, 150, 200)  # Lighter blue for unselected
+                pygame.draw.rect(game_surface, color, (button_x, button_y, button_width, button_height))
+                pygame.draw.rect(game_surface, WHITE, (button_x, button_y, button_width, button_height), 2)
+            
+            # Draw level number and name
+            level_text = level_font.render(f"{i+1}. {level_name}", True, BLACK)
+            text_rect = level_text.get_rect(center=(GAME_WIDTH // 2, button_y + button_height // 2))
+            game_surface.blit(level_text, text_rect)
+        
+        # Draw instructions
+        hint_text = hint_font.render("Zahlen/Pfeile zum Wählen, Enter zum Bestätigen", True, WHITE)
+        hint_rect = hint_text.get_rect(center=(GAME_WIDTH // 2, GAME_HEIGHT - 40))
+        game_surface.blit(hint_text, hint_rect)
+        
+        # Scale and display
+        scale_x = WINDOW_WIDTH / GAME_WIDTH
+        scale_y = WINDOW_HEIGHT / GAME_HEIGHT
+        scale_factor = min(scale_x, scale_y)
+        scaled_width = int(GAME_WIDTH * scale_factor)
+        scaled_height = int(GAME_HEIGHT * scale_factor)
+        offset_x = (WINDOW_WIDTH - scaled_width) // 2
+        offset_y = (WINDOW_HEIGHT - scaled_height) // 2
+        scaled_surface = pygame.transform.scale(game_surface, (scaled_width, scaled_height))
+        screen.fill(BLACK)
+        screen.blit(scaled_surface, (offset_x, offset_y))
+        pygame.display.update()
+    
+    # Load the selected level
+    selected_file = map_files[selected_index]
+    level_name = get_level_name(selected_file)
+    world_data = load_level(selected_file)
+    
+    return level_name, world_data
+
+
+# Load level from selection dialog
+level_name, world_data = select_level()
+
+# Set window title with level name
+pygame.display.set_caption(f"Platformer - Level: {level_name}")
 
 class Button():
     def __init__(self, x, y, image, shortcut_key:pygame.key) -> None:
@@ -202,6 +314,8 @@ class Player:
         self.images_right=[]
         self.images_left=[]
         self.direction=1
+        self.total_coins = len(coin_group)
+        self.coins_collected = 0
         for num in range(1,5):
             img_left=pygame.image.load(f'res/resized_van{num}.png')
             img_left=pygame.transform.scale(img_left,(40,80))
@@ -304,6 +418,13 @@ class Player:
             if pygame.sprite.spritecollide(self, lava_group, False):
                 print('collision with lava')
                 game_over = 1
+            
+            # collect coins
+            collected_coins = pygame.sprite.spritecollide(self, coin_group, False)
+            for coin in collected_coins:
+                coin.collect()
+                self.coins_collected += 1
+                print(f'Coin collected! Total: {self.coins_collected}/{self.total_coins}')
 
             #update player coordinates (Float-Positionen)
             self.x += dx
@@ -408,11 +529,37 @@ class Lava(pygame.sprite.Sprite):
     def reset(self) -> None:
         pass
 
+class Coin(pygame.sprite.Sprite):
+    '''
+    Coin class representing collectible multivitamin juices
+    '''
+    def __init__(self, x, y) -> None:
+        super().__init__()
+        self.image = pygame.transform.scale(pygame.image.load('res/multivitaminsaft.png'), (int(tile_size * 0.6), int(tile_size * 0.6)))
+        self.rect = self.image.get_rect()
+        self.rect.center = (x + tile_size // 2, y + tile_size // 2)
+        self.collected = False
+
+    def update(self) -> None:
+        pass
+
+    def draw(self) -> None:
+        if not self.collected:
+            game_surface.blit(self.image, self.rect)
+
+    def collect(self) -> None:
+        self.collected = True
+        self.kill()
+
 blob_group=pygame.sprite.Group()
 lava_group=pygame.sprite.Group()
+coin_group=pygame.sprite.Group()
 world=World(world_data)
 # world.print_tile_list() # this prints the tile list of the world
-player=Player(500,500)
+# Start player at the left end of the level
+PLAYER_START_X = 10
+PLAYER_START_Y = 900
+player=Player(PLAYER_START_X, PLAYER_START_Y)
 
 fps=60
 clock=pygame.time.Clock()
@@ -436,12 +583,22 @@ while game_is_running:
     camera_x = min(camera_x, map_width - WINDOW_WIDTH)  # Don't go past right edge
     
     world.draw()
+    # Draw coins with camera offset
+    for coin in coin_group:
+        if not coin.collected:
+            game_surface.blit(coin.image, (coin.rect.x - camera_x, coin.rect.y))
     # Draw lava with camera offset
     for lava in lava_group:
         game_surface.blit(lava.image, (lava.rect.x - camera_x, lava.rect.y))
     # Draw enemies with camera offset
     for blob in blob_group:
         blob.draw()
+    
+    # Draw coin counter
+    if game_over == 0:
+        coin_font = pygame.font.Font(None, 35)
+        coin_text = coin_font.render(f"Coins: {player.coins_collected}/{player.total_coins}", True, WHITE)
+        game_surface.blit(coin_text, (10, 10))
 
     #print(f'Game Over: {game_over}')
 
@@ -458,7 +615,7 @@ while game_is_running:
             if restart_button.draw() == True:
                 game_surface.blit(player.image, (player.rect.x - camera_x, player.rect.y))
                 world.reset_world(world_data)
-                player.reset(500,500)
+                player.reset(PLAYER_START_X, PLAYER_START_Y)
                 game_over = 0
             if quit_button.draw() == True:
                 game_is_running = False
